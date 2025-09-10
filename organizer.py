@@ -1,18 +1,20 @@
 import os
 import shutil
 import argparse
+import json
 
-FILE_CATEGORIES = {
-    "Images" : [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"],
-    "Documents" : [".pdf", ".docx", ".doc", ".xlsx", ".xls", ".pptx", ".ppt", ".txt", ".rtf", ".csv"],
-    "Videos": [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv"],
-    "Audio": [".mp3", ".wav", ".aac", ".flac", ".ogg"],
-    "Archives": [".zip", ".rar", ".7z", ".tar", ".gz"],
-    "Scripts": [".py", ".js", ".html", ".css", ".sh", ".bat"],
-    "Executables": [".exe", ".msi", ".dmg"]
-}
+def load_categories(config_path='config.json'):
+    try:
+        with open(config_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Error: Configuration file '{config_path}' not found.")
+        return None
+    except json.JSONDecodeError:
+        print(f"ERROR: Configuration file '{config_path}' is not a valid JSON file.")
+        return None
 
-def organize_folder(target_folder):
+def organize_folder(target_folder, categories):
     print(f"Scanning directory: {target_folder}\n")
 
     try:
@@ -29,7 +31,7 @@ def organize_folder(target_folder):
         file_extension = os.path.splitext(filename)[1].lower()
 
         moved = False
-        for category, extensions in FILE_CATEGORIES.items():
+        for category, extensions in categories.items():
 
             if file_extension in extensions:
                 category_path = os.path.join(target_folder, category)
@@ -51,6 +53,11 @@ def organize_folder(target_folder):
     print("\nOrganization complete!")
 
 if __name__ == "__main__":
+
+    file_categories = load_categories()
+    if not file_categories:
+        exit()
+
     parser = argparse.ArgumentParser(
         description="A smart tool to organize files in a directory into categorized subfolders."
     )
@@ -62,4 +69,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    organize_folder(args.target_folder)
+    organize_folder(args.target_folder, file_categories)
